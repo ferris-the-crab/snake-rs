@@ -207,7 +207,9 @@ impl Widget for &Game {
         if self.area.x < area.x + area.width && self.area.y < area.y + area.height {
             buf[(sprite_x, sprite_y)].set_symbol(&self.player.sprite);
             border.render(play_area, buf);
-            utils::text(&format!("Frame: {}", self.frame)).render(area, buf);
+            if DEBUG {
+                utils::text(&format!("Frame: {}", self.frame)).render(area, buf);
+            }
         } else {
             // NOTE: If the terminal window is too small, stop rendering and display a warning
             // TODO: Pause the game in this case (I need to implement a self.pause() method)
@@ -225,7 +227,11 @@ fn main() -> Result<()> {
     let app_result = Game::default().run(&mut terminal);
     ratatui::restore();
     match app_result {
-        Ok(()) => println!("Game stopped successfully"),
+        Ok(()) => {
+            if DEBUG {
+                println!("Game stopped successfully");
+            }
+        },
         _ => {},
     } app_result
 }
