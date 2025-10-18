@@ -15,15 +15,15 @@ use crossterm::event::{
 use ratatui::{
     DefaultTerminal,
     Frame,
-    widgets::{Block, Borders, Widget, Paragraph},
-    layout::{Rect, Alignment},
+    widgets::{Block, Borders, Widget},
+    layout::Rect,
     buffer::Buffer,
     style::{Style, Color},
 };
 
 use std::{time::Duration, thread::sleep};
 
-const DELAY: u64 = 100;     // NOTE: Delay between every frame
+const DELAY: Duration = Duration::from_millis(100);     // NOTE: Delay between every frame
 const DEBUG: bool = true;   // NOTE: Prints some debug messages
 
 #[derive(Debug)]
@@ -97,7 +97,7 @@ impl Game {
     }
 
     // NOTE: Game update loop
-    fn update(&mut self) {
+    fn update(&mut self) -> Result<()> {
         self.frame += 1;
         match self.player.direction {
             Direction::Up => self.player.y -= 1,
@@ -117,6 +117,14 @@ impl Game {
             limit if limit == self.area.x => self.exit(),
             _ => {},
         }
+
+        // NOTE: Drain the input queue
+        while event::poll(Duration::from_millis(0))? {
+            event::read()?;
+        }
+
+        sleep(DELAY);
+        Ok(())
     }
 
     // NOTE: Call this to exit using self.exit() in an implementation
@@ -128,7 +136,7 @@ impl Game {
         while !self.exit {
             terminal.draw(|frame| self.draw(frame))?;
             self.handle_events()?;
-            self.update();
+            self.update()?;
         } Ok(())
     }
 
@@ -138,8 +146,7 @@ impl Game {
 
     fn handle_events(&mut self) -> Result<()> {
         // NOTE: Check if an active event is a keypress
-        if event::poll(Duration::from_millis(DELAY))? {
-            sleep(Duration::from_millis(DELAY));
+        if event::poll(Duration::from_millis(0))? {
             match event::read()? {
                 Event::Key(key_event) if key_event.kind == KeyEventKind::Press => {
                     return self.handle_key_event(key_event)
