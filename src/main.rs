@@ -95,8 +95,8 @@ impl Default for Game {
                 turns: Vec::new(),
             },
             area: Area {
-                x: 100,
-                y: 50,
+                x: 80,
+                y: 40,
             },
         }
     }
