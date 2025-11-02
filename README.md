@@ -3,6 +3,7 @@
 This is simply a project in my Rust journey. NOT intended for actual use!
 I will not be publishing any pre-built binaries nor do I plan on maintaining it in the future.
 The game is not finished. Things like fruits/berries and the actual snake itself doesn't exist.
+Note that this "main" branch is the development branch and all code updates, even if they're not finished, will be published here.
 But go and check it out if you want to :)
 
 ## Building
