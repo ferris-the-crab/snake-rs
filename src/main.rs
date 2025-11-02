@@ -26,12 +26,34 @@ use std::{time::Duration, thread::sleep};
 const DELAY: Duration = Duration::from_millis(100);     // NOTE: Delay between every frame
 const DEBUG: bool = true;   // NOTE: Prints some debug messages
 
+// TODO: Working on creating the actual snake
+// NOTE: We can store each turn and draw a snake based on that
+// instead of storing the position of every segment
+#[derive(Debug)]
+struct Turn {
+    x: u16,
+    y: u16,
+    entry: Direction,
+    out: Direction,
+}
+
+impl Turn {
+    fn new(point: (u16, u16), entry: Direction, out: Direction) -> Self {
+        Turn {
+            x: point.0,
+            y: point.1,
+            entry, out,
+        }
+    }
+}
+
 #[derive(Debug)]
 struct Player {
     sprite: String,
     x: u16,
     y: u16,
     direction: Direction,
+    turns: Vec<Turn>,
 }
 
 #[derive(Debug)]
@@ -51,7 +73,7 @@ struct Game {
 
 // TODO: Add directions and basic snake movement
 // NOTE: DONE!
-#[derive(Debug, PartialEq)]
+#[derive(Debug, PartialEq, Clone, Copy)]
 enum Direction {
     Up,
     Down,
@@ -70,6 +92,7 @@ impl Default for Game {
                 x: 20,
                 y: 20,
                 direction: Direction::Down,
+                turns: Vec::new(),
             },
             area: Area {
                 x: 100,
@@ -81,6 +104,12 @@ impl Default for Game {
 
 
 impl Game {
+    fn new_turn(&mut self, entry: Direction) {
+        self.player.turns.push(
+            Turn::new((self.player.x, self.player.y), entry, self.player.direction)
+        );
+    }
+
     // NOTE: Game update loop
     fn update(&mut self) -> Result<()> {
         self.frame += 1;
@@ -126,7 +155,15 @@ impl Game {
     fn run(&mut self, terminal: &mut DefaultTerminal) -> Result<()> {
         while !self.exit {
             terminal.draw(|frame| self.draw(frame))?;
+
+            // NOTE: Store the players direction before handling events
+            let entry: Direction = self.player.direction;
+
             self.handle_events()?;
+
+            // NOTE: If the player turned, push it to self.player.turns
+            if entry != self.player.direction { self.new_turn(entry); }
+
             self.update()?;
         } Ok(())
     }
@@ -206,7 +243,7 @@ impl Widget for &Game {
             buf[(sprite_x, sprite_y)].set_symbol(&self.player.sprite);
             border.render(play_area, buf);
             if DEBUG {
-                utils::text(&format!("Frame: {}", self.frame)).render(area, buf);
+                utils::text(&format!("frame: {} - turns: {:?}", self.frame, self.player.turns)).render(area, buf);
             }
         } else {
             // NOTE: If the terminal window is too small, stop rendering and display a warning
