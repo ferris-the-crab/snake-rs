@@ -81,21 +81,6 @@ impl Default for Game {
 
 
 impl Game {
-    fn new(s: &str, x: u16, y: u16, maxx: u16, maxy: u16, direction: Direction) -> Self {
-        Self {
-            exit: false,
-            frame: 0,
-            player: Player {
-                sprite: String::from(s),
-                x, y, direction,
-            },
-            area: Area {
-                x: maxx,
-                y: maxy,
-            }
-        }
-    }
-
     // NOTE: Game update loop
     fn update(&mut self) -> Result<()> {
         self.frame += 1;
@@ -119,8 +104,14 @@ impl Game {
         }
 
         // NOTE: Drain the input queue
-        while event::poll(Duration::from_millis(0))? {
-            event::read()?;
+        loop {
+            match event::poll(Duration::from_millis(0)) {
+                Err(_) => break,
+                Ok(key) => {
+                    if key { let _ = event::read(); }
+                    else { break }
+                }
+            }
         }
 
         sleep(DELAY);
