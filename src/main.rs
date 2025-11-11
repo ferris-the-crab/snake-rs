@@ -65,6 +65,7 @@ struct Area {
 #[derive(Debug)]
 struct Game {
     exit: bool,
+    paused: bool,
     frame: u64,
     player: Player,
     area: Area,
@@ -85,6 +86,7 @@ enum Direction {
 impl Default for Game {
     fn default() -> Self {
         Self {
+            paused: false,
             exit: false,
             frame: 0,
             player: Player {
@@ -154,18 +156,23 @@ impl Game {
     
     fn run(&mut self, terminal: &mut DefaultTerminal) -> Result<()> {
         while !self.exit {
+            if self.paused { self.handle_pause()? }
             terminal.draw(|frame| self.draw(frame))?;
 
             // NOTE: Store the players direction before handling events
             let entry: Direction = self.player.direction;
-
             self.handle_events()?;
 
             // NOTE: If the player turned, push it to self.player.turns
             if entry != self.player.direction { self.new_turn(entry); }
-
             self.update()?;
         } Ok(())
+    }
+
+    fn handle_pause(&mut self) -> Result<()> {
+        let _ = event::read();
+        self.paused = false;
+        Ok(())
     }
 
     fn draw(&self, frame: &mut Frame) {
@@ -189,10 +196,10 @@ impl Game {
     // NOTE: DONE!
     fn handle_key_event(&mut self, key_event: KeyEvent) -> Result<()> {
         match key_event.code {
-            // NOTE: Press 'q' to exit
             KeyCode::Char('q') => self.exit(),
+            KeyCode::Char('p') => self.paused = true,
 
-            // NOTE: Simple movement, but it's not Snake-like... yet...
+            // NOTE: Simple movement
             KeyCode::Char('w') => { if self.player.direction != Direction::Down { self.player.direction = Direction::Up }},
             KeyCode::Char('s') => { if self.player.direction != Direction::Up { self.player.direction = Direction::Down }},
             KeyCode::Char('a') => { if self.player.direction != Direction::Right { self.player.direction = Direction::Left }},
